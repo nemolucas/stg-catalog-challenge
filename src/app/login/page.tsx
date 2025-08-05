@@ -34,7 +34,7 @@ export default function LoginPage() {
         }
                 const handleRedirect = () => {
                 setTimeout(() => {
-                router.push('/register');
+                router.push('/signup');
                 }, 1000);
             };
 

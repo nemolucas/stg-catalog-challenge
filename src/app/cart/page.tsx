@@ -119,7 +119,7 @@ export default function CartPage() {
         <ul className="space-y-4">
           {cartItems.map((item) => (
             <li key={item.id} className="border p-4 rounded-md shadow-sm relative bg-black text-white">
-              {/* Botão de remover */}
+              {}
               <button
                 className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xl"
                 onClick={() => removeItem(item.id)}
@@ -127,7 +127,7 @@ export default function CartPage() {
                 ✖
               </button>
 
-              {/* Conteúdo do item */}
+              {}
               <h2 className="text-lg font-semibold">{item.products.name}</h2>
               <p>Quantidade: {item.quantity}</p>
               <p>Preço unitário: R$ {item.products.price.toFixed(2)}</p>
