@@ -19,6 +19,9 @@ export default function CartPage() {
   const [user, setUser] = useState<any>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -133,7 +136,6 @@ export default function CartPage() {
               <p>Preço unitário: R$ {item.products.price.toFixed(2)}</p>
               <p className="font-bold">Subtotal: R$ {(item.quantity * item.products.price).toFixed(2)}</p>
 
-              {/* Controles de quantidade */}
               <div className="mt-3 flex justify-end items-center space-x-2">
                 <button
                   className="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600"
@@ -154,9 +156,72 @@ export default function CartPage() {
         </ul>
       )}
 
-      <div className="mt-6 text-xl font-bold">
-        Total: R$ {calculateTotal().toFixed(2)}
+  {cartItems.length > 0 && (
+    <div className="mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-xl font-bold">
+          Total: R$ {calculateTotal().toFixed(2)}
+        </span>
+        <button
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          onClick={() => setShowOrderForm(true)}
+        >
+          Fazer pedido
+        </button>
       </div>
+
+    {showOrderForm && (
+      <div className="bg-gray-100 p-4 rounded-md shadow-inner space-y-4 text-black">
+        <div>
+          <label className="block font-medium mb-1">Seu nome:</label>
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">Número do WhatsApp (com DDD):</label>
+          <input
+            type="tel"
+            className="w-full p-2 border rounded"
+            placeholder="Ex: 81999999999"
+            value={whatsappNumber}
+            onChange={(e) => setWhatsappNumber(e.target.value)}
+          />
+        </div>
+
+      <button
+        className={`w-full bg-blue-600 text-white px-4 py-2 rounded transition ${
+          customerName && whatsappNumber ? 'hover:bg-blue-700' : 'opacity-50 cursor-not-allowed'
+        }`}
+        disabled={!customerName || !whatsappNumber}
+        onClick={() => {
+          const orderLines = cartItems.map((item) =>
+            `- ${item.products.name} - Qtd: ${item.quantity} - R$ ${(item.products.price * item.quantity).toFixed(2)}`
+          ).join('%0A');
+
+          const message =
+            `👤 Cliente: ${customerName}` +
+            `📧 Email: ${user?.email}` +
+            `📦 PRODUTOS: ${orderLines}` +
+            `💰 TOTAL: R$ ${calculateTotal().toFixed(2)}` +
+            `---Pedido via STG Catalog`;
+
+          const encodedMessage = encodeURIComponent(message);
+          const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${encodedMessage}`;
+          
+          window.open(whatsappLink, '_blank');
+        }}
+      >
+        Finalizar pedido
+      </button>
+      </div>
+    )}
+  </div>
+)}
     </div>
   );
 }
