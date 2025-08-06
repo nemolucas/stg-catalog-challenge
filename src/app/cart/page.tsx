@@ -156,19 +156,19 @@ export default function CartPage() {
         </ul>
       )}
 
-     {cartItems.length > 0 && (
-  <div className="mt-6">
-    <div className="flex justify-between items-center mb-4">
-      <span className="text-xl font-bold">
-        Total: R$ {calculateTotal().toFixed(2)}
-      </span>
-      <button
-        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-        onClick={() => setShowOrderForm(true)}
-      >
-        Fazer pedido
-      </button>
-    </div>
+  {cartItems.length > 0 && (
+    <div className="mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-xl font-bold">
+          Total: R$ {calculateTotal().toFixed(2)}
+        </span>
+        <button
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          onClick={() => setShowOrderForm(true)}
+        >
+          Fazer pedido
+        </button>
+      </div>
 
     {showOrderForm && (
       <div className="bg-gray-100 p-4 rounded-md shadow-inner space-y-4 text-black">
@@ -193,23 +193,35 @@ export default function CartPage() {
           />
         </div>
 
-        <button
-          className={`w-full bg-blue-600 text-white px-4 py-2 rounded transition ${
-            customerName && whatsappNumber ? 'hover:bg-blue-700' : 'opacity-50 cursor-not-allowed'
-          }`}
-          disabled={!customerName || !whatsappNumber}
-          onClick={() => {
-            alert(`Pedido enviado para ${whatsappNumber} por ${customerName}`);
-          }}
-        >
-          Finalizar pedido
-        </button>
+      <button
+        className={`w-full bg-blue-600 text-white px-4 py-2 rounded transition ${
+          customerName && whatsappNumber ? 'hover:bg-blue-700' : 'opacity-50 cursor-not-allowed'
+        }`}
+        disabled={!customerName || !whatsappNumber}
+        onClick={() => {
+          const orderLines = cartItems.map((item) =>
+            `- ${item.products.name} - Qtd: ${item.quantity} - R$ ${(item.products.price * item.quantity).toFixed(2)}`
+          ).join('%0A');
+
+          const message =
+            `👤 Cliente: ${customerName}` +
+            `📧 Email: ${user?.email}` +
+            `📦 PRODUTOS: ${orderLines}` +
+            `💰 TOTAL: R$ ${calculateTotal().toFixed(2)}` +
+            `---Pedido via STG Catalog`;
+
+          const encodedMessage = encodeURIComponent(message);
+          const whatsappLink = `https://wa.me/55${whatsappNumber}?text=${encodedMessage}`;
+          
+          window.open(whatsappLink, '_blank');
+        }}
+      >
+        Finalizar pedido
+      </button>
       </div>
     )}
   </div>
 )}
-
-
     </div>
   );
 }
