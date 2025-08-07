@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 
 interface CartItem {
@@ -12,51 +12,54 @@ interface CartItem {
     id: string;
     name: string;
     price: number;
-  };
+  }; 
 }
 
 export default function CartPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const router = useRouter();
 
   useEffect(() => {
-    const fetchCart = async () => {
-      const { data: sessionData } = await supabase.auth.getUser();
-      const currentUser = sessionData?.user;
+      const fetchCart = async () => {
+        setLoading(true);
+        const { data: sessionData } = await supabase.auth.getUser();
+        const currentUser = sessionData?.user;
 
-      if (!currentUser) {
-        setLoading(false);
-        return;
-      }
+        if (!currentUser) {
+          setLoading(false);
+          return;
+        }
 
-      setUser(currentUser);
+        setUser(currentUser);
 
-      const { data: items, error } = await supabase
-        .from('cart_items')
-        .select(`
-          id,
-          quantity,
-          products (
+        const { data: items, error } = await supabase
+          .from('cart_items')
+          .select(`
             id,
-            name,
-            price
-          )
-        `)
-        .eq('user_id', currentUser.id);
+            quantity,
+            products (
+              id,
+              name,
+              price
+            )
+          `)
+          .eq('user_id', currentUser.id)
+          .returns<CartItem[]>(); 
 
-      if (error) {
-        console.error('Erro ao buscar o carrinho:', error);
-      } else {
-        setCartItems(items || []);
-      }
+        if (error) {
+          console.error('Erro ao buscar o carrinho:', error);
+          setCartItems([]);
+        } else {
+          const validItems = items?.filter(item => item.products !== null) || [];
+          setCartItems(validItems);
+        }
 
-      setLoading(false);
-    };
+        setLoading(false);
+      };
     
 
     fetchCart();
