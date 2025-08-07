@@ -19,6 +19,7 @@ export default function Home() {
   const [checkingLogin, setCheckingLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [showModal, setShowModal] = useState(false);
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const router = useRouter();
@@ -56,6 +57,8 @@ export default function Home() {
 
     fetchProducts();
   }, []);
+
+  const uniqueCategories = ['Todos', ...Array.from(new Set(products.map(p => p.category)))];
 
   const handleAddToCart = async (productId: string) => {
     if (!userId) return;
@@ -95,62 +98,81 @@ export default function Home() {
   };
 
   if (checkingLogin) {
-    return <p className="p-4">Verificando login...</p>;
+    return <p className="p-4 text-center text-gray-600">Verificando login...</p>;
   }
 
   return (
-    <main className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Catálogo</h1>
-      </div>
+    <main className="p-6 bg-gray-100 min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <h1 className="text-3xl font-semibold text-black tracking-tight font-sans">
+        Catálogo de Produtos
+      </h1>
 
-      {error && <p className="text-red-500 mb-4">Erro: {error}</p>}
+      <select
+        value={selectedCategory}
+        onChange={(e) => setSelectedCategory(e.target.value)}
+        className="border-4 border-black rounded-none p-2 bg-white text-black shadow-[4px_4px_0_rgba(0,0,0,1)]"
+      >
+        {uniqueCategories.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+      </select>
+    </div>
 
-      <ul className="grid grid-cols-2 gap-4">
-        {products.map((product) => (
-          <li
-            key={product.id}
-            className="border p-2 rounded shadow relative cursor-pointer hover:shadow-md transition"
-            onClick={() => openProductModal(product)}
-          >
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="w-full h-32 object-cover mb-2 rounded"
-            />
-            <h2 className="font-semibold">{product.name}</h2>
-            <p className="text-sm text-gray-500">{product.category}</p>
-            <p className="text-green-600 font-bold">
-              R$ {Number(product.price).toFixed(2)}
-            </p>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
 
-            <button
-              className="mt-2 bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
-              onClick={(e) => {
-                e.stopPropagation(); // Impede que o clique no botão abra o modal
-                if (!isLoggedIn) {
-                  router.push('/login');
-                } else {
-                  handleAddToCart(product.id);
-                }
-              }}
-            >
-              🛒 Adicionar ao carrinho
-            </button>
-          </li>
+      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+       {products
+  .filter((product) =>
+    selectedCategory === 'Todos' ? true : product.category === selectedCategory
+  )
+  .map((product) => (
+
+      <li
+        key={product.id}
+        className="bg-white border-4 border-black rounded-none shadow-[6px_6px_0_rgba(0,0,0,1)] cursor-pointer flex flex-col p-4"
+        onClick={() => openProductModal(product)}
+      >
+        <img
+          src={product.image_url}
+          alt={product.name}
+          className="w-full h-48 object-cover rounded-none mb-3 border-4 border-black"
+        />
+        <h2 className="font-semibold text-lg text-gray-900">{product.name}</h2>
+        <p className="text-sm text-gray-500 mb-1">{product.category}</p>
+        <p className="text-teal-600 font-bold text-lg mb-4">
+          R$ {Number(product.price).toFixed(2)}
+        </p>
+
+        <button
+          className="mt-auto bg-teal-600 text-white py-2 rounded hover:bg-teal-700 transition"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isLoggedIn) {
+              router.push('/login');
+            } else {
+              handleAddToCart(product.id);
+            }
+          }}
+        >
+          🛒 Adicionar ao carrinho
+        </button>
+      </li>
+
         ))}
       </ul>
 
       {showModal && (
-        <div className="fixed bottom-4 right-4 bg-black text-white px-4 py-2 rounded shadow-lg animate-fade-in-out z-50">
+        <div className="fixed bottom-4 right-4 bg-teal-600 text-white px-4 py-2 rounded shadow-lg animate-fade-in-out z-50">
           ✅ Item adicionado ao carrinho!
         </div>
       )}
 
     {modalProduct && (
-      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-        <div className="relative bg-white p-6 rounded-md w-11/12 max-w-lg text-black shadow-lg overflow-hidden">
-
+      <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+        <div className="relative bg-white p-6 rounded-md w-11/12 max-w-lg text-black shadow-xl overflow-hidden pointer-events-auto">
           <button
             className="absolute top-2 right-2 text-red-600 text-2xl font-bold hover:text-red-800 z-20"
             onClick={closeProductModal}
@@ -159,14 +181,19 @@ export default function Home() {
           </button>
 
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none"
-            style={{ backgroundImage: `url(${modalProduct.image_url})` }}
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              opacity: 0.1,
+            }}
           />
 
           <div className="relative z-10">
             <h2 className="text-2xl font-bold mb-2">{modalProduct.name}</h2>
             <p className="text-sm text-gray-700 italic mb-2">{modalProduct.category}</p>
-            <p className="text-lg font-semibold text-green-700 mb-4">
+            <p className="text-lg font-semibold text-teal-700 mb-4">
               R$ {modalProduct.price.toFixed(2)}
             </p>
             <p className="text-gray-800">{modalProduct.description}</p>
@@ -174,7 +201,6 @@ export default function Home() {
         </div>
       </div>
     )}
-
     </main>
   );
 }
